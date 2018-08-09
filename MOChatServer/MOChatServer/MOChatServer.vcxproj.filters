@@ -1,0 +1,135 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="LIB">
+      <UniqueIdentifier>{396cdc84-12cd-4f45-82ef-60718c5fc019}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ChatServer">
+      <UniqueIdentifier>{d274703f-df36-45bc-a3f0-dc467afedbeb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="LIB\CPUUsage">
+      <UniqueIdentifier>{5ad335bf-5317-4eab-9868-a54a3bd42146}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="LIB\Dump">
+      <UniqueIdentifier>{362a3e76-6bad-4783-b1fb-561af08f19b1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="LIB\Ehternet">
+      <UniqueIdentifier>{9ad6af9d-9e0d-449a-978c-5bd36c25d187}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="LIB\Log">
+      <UniqueIdentifier>{b9020208-8b58-4f95-bbdf-29d85cd2fb5b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="LIB\MemoryPool">
+      <UniqueIdentifier>{67e264c9-7f71-41ed-b870-f9e4122a7be8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="LIB\Packet">
+      <UniqueIdentifier>{da156843-bae2-4e56-a906-2c494101d7b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="LIB\Parse">
+      <UniqueIdentifier>{d9508ff3-787f-4c8d-8969-1062ef30255d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="LIB\RingBuffer">
+      <UniqueIdentifier>{8dcdbc36-200c-444d-8d38-655c0e8e72e5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ChatServer\Common">
+      <UniqueIdentifier>{a8e029e4-b9d7-4ccd-a627-1b0561b60a7b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ChatServer\Config">
+      <UniqueIdentifier>{90d3a37d-6c2f-426d-b217-4a92c1c408a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ChatServer\Server">
+      <UniqueIdentifier>{e2447aeb-bbf0-4d05-95cd-733b799a0aec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ChatServer\Server\NetServer">
+      <UniqueIdentifier>{b6220235-a4b5-4585-9943-094b258fddef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ChatServer\Server\LanClient">
+      <UniqueIdentifier>{c474df9c-ce4f-4a3d-b6d3-08267e820429}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ChatServer\Server\LanClient\GameLanClient">
+      <UniqueIdentifier>{7276a5fa-f0f0-4d55-ac6b-0597efe6c5a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ChatServer\Server\LanClient\MonitorLanClient">
+      <UniqueIdentifier>{0b32029a-7789-4ee7-a297-4fc5cd1ac481}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="CpuUsage.cpp">
+      <Filter>LIB\CPUUsage</Filter>
+    </ClCompile>
+    <ClCompile Include="APIHook.cpp">
+      <Filter>LIB\Dump</Filter>
+    </ClCompile>
+    <ClCompile Include="Dump.cpp">
+      <Filter>LIB\Dump</Filter>
+    </ClCompile>
+    <ClCompile Include="EtherNet_PDH.cpp">
+      <Filter>LIB\Ehternet</Filter>
+    </ClCompile>
+    <ClCompile Include="Log.cpp">
+      <Filter>LIB\Log</Filter>
+    </ClCompile>
+    <ClCompile Include="RingBuffer.cpp">
+      <Filter>LIB\RingBuffer</Filter>
+    </ClCompile>
+    <ClCompile Include="Parse.cpp">
+      <Filter>LIB\Parse</Filter>
+    </ClCompile>
+    <ClCompile Include="Packet.cpp">
+      <Filter>LIB\Packet</Filter>
+    </ClCompile>
+    <ClCompile Include="Config.cpp">
+      <Filter>ChatServer\Config</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="CpuUsage.h">
+      <Filter>LIB\CPUUsage</Filter>
+    </ClInclude>
+    <ClInclude Include="APIHook.h">
+      <Filter>LIB\Dump</Filter>
+    </ClInclude>
+    <ClInclude Include="Dump.h">
+      <Filter>LIB\Dump</Filter>
+    </ClInclude>
+    <ClInclude Include="EtherNet_PDH.h">
+      <Filter>LIB\Ehternet</Filter>
+    </ClInclude>
+    <ClInclude Include="LanClient.h">
+      <Filter>ChatServer\Server\LanClient</Filter>
+    </ClInclude>
+    <ClInclude Include="Log.h">
+      <Filter>LIB\Log</Filter>
+    </ClInclude>
+    <ClInclude Include="LockFreeQueue.h">
+      <Filter>LIB\MemoryPool</Filter>
+    </ClInclude>
+    <ClInclude Include="LockFreeStack.h">
+      <Filter>LIB\MemoryPool</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryPool.h">
+      <Filter>LIB\MemoryPool</Filter>
+    </ClInclude>
+    <ClInclude Include="RingBuffer.h">
+      <Filter>LIB\RingBuffer</Filter>
+    </ClInclude>
+    <ClInclude Include="Parse.h">
+      <Filter>LIB\Parse</Filter>
+    </ClInclude>
+    <ClInclude Include="Packet.h">
+      <Filter>LIB\Packet</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonProtocol.h">
+      <Filter>ChatServer\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Config.h">
+      <Filter>ChatServer\Config</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ChatServer_Config.ini">
+      <Filter>ChatServer\Common</Filter>
+    </None>
+  </ItemGroup>
+</Project>
