@@ -122,8 +122,11 @@
     <ClCompile Include="CpuUsage.cpp" />
     <ClCompile Include="Dump.cpp" />
     <ClCompile Include="EtherNet_PDH.cpp" />
+    <ClCompile Include="GameLanClient.cpp" />
     <ClCompile Include="Log.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MonitorLanClient.cpp" />
+    <ClCompile Include="NetServer.cpp" />
     <ClCompile Include="Packet.cpp" />
     <ClCompile Include="Parse.cpp" />
     <ClCompile Include="RingBuffer.cpp" />
@@ -135,11 +138,14 @@
     <ClInclude Include="CpuUsage.h" />
     <ClInclude Include="Dump.h" />
     <ClInclude Include="EtherNet_PDH.h" />
+    <ClInclude Include="GameLanClient.h" />
     <ClInclude Include="LanClient.h" />
     <ClInclude Include="LockFreeQueue.h" />
     <ClInclude Include="LockFreeStack.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="MemoryPool.h" />
+    <ClInclude Include="MonitorLanClient.h" />
+    <ClInclude Include="NetServer.h" />
     <ClInclude Include="Packet.h" />
     <ClInclude Include="Parse.h" />
     <ClInclude Include="RingBuffer.h" />

@@ -82,6 +82,15 @@
     <ClCompile Include="Config.cpp">
       <Filter>ChatServer\Config</Filter>
     </ClCompile>
+    <ClCompile Include="NetServer.cpp">
+      <Filter>ChatServer\Server\NetServer</Filter>
+    </ClCompile>
+    <ClCompile Include="MonitorLanClient.cpp">
+      <Filter>ChatServer\Server\LanClient\MonitorLanClient</Filter>
+    </ClCompile>
+    <ClCompile Include="GameLanClient.cpp">
+      <Filter>ChatServer\Server\LanClient\GameLanClient</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CpuUsage.h">
@@ -125,6 +134,15 @@
     </ClInclude>
     <ClInclude Include="Config.h">
       <Filter>ChatServer\Config</Filter>
+    </ClInclude>
+    <ClInclude Include="NetServer.h">
+      <Filter>ChatServer\Server\NetServer</Filter>
+    </ClInclude>
+    <ClInclude Include="MonitorLanClient.h">
+      <Filter>ChatServer\Server\LanClient\MonitorLanClient</Filter>
+    </ClInclude>
+    <ClInclude Include="GameLanClient.h">
+      <Filter>ChatServer\Server\LanClient\GameLanClient</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
