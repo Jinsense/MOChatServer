@@ -118,36 +118,38 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="APIHook.cpp" />
+    <ClCompile Include="ChatServer.cpp" />
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="CpuUsage.cpp" />
     <ClCompile Include="Dump.cpp" />
     <ClCompile Include="EtherNet_PDH.cpp" />
-    <ClCompile Include="GameLanClient.cpp" />
+    <ClCompile Include="LanGameClient.cpp" />
     <ClCompile Include="Log.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="MonitorLanClient.cpp" />
     <ClCompile Include="NetServer.cpp" />
     <ClCompile Include="Packet.cpp" />
     <ClCompile Include="Parse.cpp" />
+    <ClCompile Include="Player.cpp" />
     <ClCompile Include="RingBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="APIHook.h" />
+    <ClInclude Include="ChatServer.h" />
     <ClInclude Include="CommonProtocol.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="CpuUsage.h" />
     <ClInclude Include="Dump.h" />
     <ClInclude Include="EtherNet_PDH.h" />
-    <ClInclude Include="GameLanClient.h" />
+    <ClInclude Include="LanGameClient.h" />
     <ClInclude Include="LanClient.h" />
     <ClInclude Include="LockFreeQueue.h" />
     <ClInclude Include="LockFreeStack.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="MemoryPool.h" />
-    <ClInclude Include="MonitorLanClient.h" />
     <ClInclude Include="NetServer.h" />
     <ClInclude Include="Packet.h" />
     <ClInclude Include="Parse.h" />
+    <ClInclude Include="Player.h" />
     <ClInclude Include="RingBuffer.h" />
   </ItemGroup>
   <ItemGroup>

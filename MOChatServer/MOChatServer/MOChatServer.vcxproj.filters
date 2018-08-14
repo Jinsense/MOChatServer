@@ -46,11 +46,14 @@
     <Filter Include="ChatServer\Server\LanClient">
       <UniqueIdentifier>{c474df9c-ce4f-4a3d-b6d3-08267e820429}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ChatServer\Server\LanClient\GameLanClient">
+    <Filter Include="ChatServer\Server\ChatServer">
+      <UniqueIdentifier>{97a701b5-7f8d-4f25-86bd-ce44b47514da}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ChatServer\Server\LanClient\LanGameClient">
       <UniqueIdentifier>{7276a5fa-f0f0-4d55-ac6b-0597efe6c5a2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ChatServer\Server\LanClient\MonitorLanClient">
-      <UniqueIdentifier>{0b32029a-7789-4ee7-a297-4fc5cd1ac481}</UniqueIdentifier>
+    <Filter Include="ChatServer\Player">
+      <UniqueIdentifier>{3b6a3c51-e901-4548-b4a4-707594ceae09}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -85,11 +88,14 @@
     <ClCompile Include="NetServer.cpp">
       <Filter>ChatServer\Server\NetServer</Filter>
     </ClCompile>
-    <ClCompile Include="MonitorLanClient.cpp">
-      <Filter>ChatServer\Server\LanClient\MonitorLanClient</Filter>
+    <ClCompile Include="ChatServer.cpp">
+      <Filter>ChatServer\Server\ChatServer</Filter>
     </ClCompile>
-    <ClCompile Include="GameLanClient.cpp">
-      <Filter>ChatServer\Server\LanClient\GameLanClient</Filter>
+    <ClCompile Include="LanGameClient.cpp">
+      <Filter>ChatServer\Server\LanClient\LanGameClient</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>ChatServer\Player</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -138,11 +144,14 @@
     <ClInclude Include="NetServer.h">
       <Filter>ChatServer\Server\NetServer</Filter>
     </ClInclude>
-    <ClInclude Include="MonitorLanClient.h">
-      <Filter>ChatServer\Server\LanClient\MonitorLanClient</Filter>
+    <ClInclude Include="ChatServer.h">
+      <Filter>ChatServer\Server\ChatServer</Filter>
     </ClInclude>
-    <ClInclude Include="GameLanClient.h">
-      <Filter>ChatServer\Server\LanClient\GameLanClient</Filter>
+    <ClInclude Include="LanGameClient.h">
+      <Filter>ChatServer\Server\LanClient\LanGameClient</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>ChatServer\Player</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

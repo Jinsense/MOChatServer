@@ -19,13 +19,16 @@ public:
 	//	NETWORK
 	UINT VER_CODE;
 
-	WCHAR BATTLE_BIND_IP[20];
-	int BATTLE_BIND_IP_SIZE;
-	int BATTLE_BIND_PORT;
+	WCHAR CHAT_BIND_IP[16];
+	int CHAT_BIND_IP_SIZE;
+	int CHAT_BIND_PORT;
 
-	WCHAR MONITOR_IP[20];
-	int MONITOR_IP_SIZE;
-	int MONITOR_PORT;
+	WCHAR MY_IP[16];
+	int MY_IP_SIZE;
+
+	WCHAR BATTLE_IP[16];
+	int BATTLE_IP_SIZE;
+	int BATTLE_PORT;
 
 	//	SYSTEM
 	int WORKER_THREAD;
@@ -39,7 +42,7 @@ public:
 	CINIParse _Parse;
 
 private:
-	char IP[60];
+	char IP[40];
 };
 
 

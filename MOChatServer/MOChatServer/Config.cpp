@@ -6,13 +6,16 @@ CConfig::CConfig()
 {
 	VER_CODE = NULL;
 
-	ZeroMemory(&BATTLE_BIND_IP, sizeof(BATTLE_BIND_IP));
-	BATTLE_BIND_IP_SIZE = eNUM_BUF;
-	BATTLE_BIND_PORT = NULL;
+	ZeroMemory(&CHAT_BIND_IP, sizeof(CHAT_BIND_IP));
+	CHAT_BIND_IP_SIZE = eNUM_BUF;
+	CHAT_BIND_PORT = NULL;
 
-	ZeroMemory(&MONITOR_IP, sizeof(MONITOR_IP));
-	MONITOR_IP_SIZE = eNUM_BUF;
-	MONITOR_PORT = NULL;
+	ZeroMemory(&MY_IP, sizeof(MY_IP));
+	MY_IP_SIZE = NULL;
+
+	ZeroMemory(&BATTLE_IP, sizeof(BATTLE_IP));
+	BATTLE_IP_SIZE = eNUM_BUF;
+	BATTLE_PORT = NULL;
 
 	WORKER_THREAD = NULL;
 	SERVER_TIMEOUT = NULL;
@@ -43,9 +46,18 @@ bool CConfig::Set()
 	if (false == res)
 		return false;
 	
-	_Parse.GetValue("BATTLE_BIND_PORT", &IP[0], &BATTLE_BIND_IP_SIZE);
-	_Parse.UTF8toUTF16(IP, BATTLE_BIND_IP, sizeof(BATTLE_BIND_IP));
-	_Parse.GetValue("BATTLE_BIND_PORT", &BATTLE_BIND_PORT);
+	_Parse.GetValue("CHAT_BIND_IP", &IP[0], &CHAT_BIND_IP_SIZE);
+	_Parse.UTF8toUTF16(IP, CHAT_BIND_IP, sizeof(CHAT_BIND_IP));
+	_Parse.GetValue("CHAT_BIND_PORT", &CHAT_BIND_PORT);
+	if (false == res)
+		return false;
+
+	_Parse.GetValue("MY_IP", &IP[0], &MY_IP_SIZE);
+	_Parse.UTF8toUTF16(IP, CHAT_BIND_IP, sizeof(CHAT_BIND_IP));
+
+	_Parse.GetValue("BATTLE_IP", &IP[0], &BATTLE_IP_SIZE);
+	_Parse.UTF8toUTF16(IP, BATTLE_IP, sizeof(BATTLE_IP));
+	_Parse.GetValue("BATTLE_PORT", &BATTLE_PORT);
 	if (false == res)
 		return false;
 
