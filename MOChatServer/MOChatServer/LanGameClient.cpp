@@ -217,6 +217,8 @@ bool CLanGameClient::Disconnect()
 	}
 
 	WSACleanup();
+	//	현재 존재하는 모든 방의 유저들을 종료시키고 모든 방을 파괴
+	_pChatServer->BattleDisconnect();
 	return true;
 }
 
@@ -533,24 +535,63 @@ void CLanGameClient::ReqConnectToken(CPacket * pPacket)
 
 void CLanGameClient::ReqCreateRoom(CPacket * pPacket)
 {
+	UINT ReqSequence = NULL;
 	//	BattleRoom을 생성해서 패킷의 정보를 넣어서 초기화를 해주고
 	//	RoomMap에 넣어준다. [ 채팅방 생성 ]
+	BATTLEROOM * pRoom = _pChatServer->_BattleRoomPool->Alloc();
+	InitializeSRWLock(&pRoom->Room_lock);
+	*pPacket >> pRoom->ServerNo >> pRoom->RoomNo >> pRoom->MaxUser;
+	pPacket->PopData((char*)&pRoom->EnterToken, sizeof(pRoom->EnterToken));
+	*pPacket >> ReqSequence;
+	ReqSequence++;
+
+	AcquireSRWLockExclusive(&_pChatServer->_BattleRoom_lock);
+	_pChatServer->_BattleRoomMap.insert(make_pair(pRoom->RoomNo, pRoom));
+	ReleaseSRWLockExclusive(&_pChatServer->_BattleRoom_lock);
 
 	//	배틀 서버에 수신응답
 	CPacket * ResPacket = CPacket::Alloc();
 	WORD Type = en_PACKET_CHAT_BAT_RES_CREATED_ROOM;
-
+	*ResPacket << Type << pRoom->RoomNo << ReqSequence;
+	SendPacket(ResPacket);
+	ResPacket->Free();
 	return;
 }
 
 void CLanGameClient::ReqDestryRoom(CPacket * pPacket)
 {
+	int ServerNo = NULL;
+	int RoomNo = NULL;
+	UINT ReqSequence = NULL;
+	BATTLEROOM * pRoom = nullptr;
 	//	Map에서 해당 채팅방을 찾아서 해당 방의 유저를 끊고
 	//	해당 방을 Map에서 삭제 및 메모리풀에 반환한다.
+	*pPacket >> ServerNo >> RoomNo >> ReqSequence;
+	ReqSequence++;
+	
+	pRoom = _pChatServer->FindBattleRoom(RoomNo);
+	if (nullptr == pRoom)
+	{
+		_pChatServer->m_Log->Log(L"Error", LOG_SYSTEM, L"Wrong RoomNo - RoomNo : %d", RoomNo);
+	}
+	else
+	{
+		AcquireSRWLockExclusive(&pRoom->Room_lock);
+		for (auto i = pRoom->RoomPlayer.begin(); i != pRoom->RoomPlayer.end();)
+		{
+			_pChatServer->Disconnect((*i).ClientID);
+			i = pRoom->RoomPlayer.erase(i);
+		}
+		ReleaseSRWLockExclusive(&pRoom->Room_lock);
 
+		_pChatServer->_BattleRoomPool->Free(pRoom);
+		AcquireSRWLockExclusive(&_pChatServer->_BattleRoom_lock);
+		_pChatServer->_BattleRoomMap.erase(pRoom->RoomNo);
+		ReleaseSRWLockExclusive(&_pChatServer->_BattleRoom_lock);
+	}
 	//	배틀 서버에 수신응답
 	CPacket * ResPacket = CPacket::Alloc();
 	WORD Type = en_PACKET_CHAT_BAT_RES_DESTROY_ROOM;
-
+	*ResPacket << Type << RoomNo << ReqSequence;
 	return;
 }

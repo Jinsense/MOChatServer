@@ -20,11 +20,31 @@ using namespace std;
 enum en_RES_LOGIN
 {
 	LOGIN_SUCCESS = 1,
-	SESSIONKEY_ERROR = 2,
-	ACCOUNTNO_NOT_EXIST = 3,
-	ETC_ERROR = 4,
-	VER_ERROR = 5,
+	LOGIN_FAIL = 0,
 };
+
+enum en_RES_ENTERROOM
+{
+	SUCCESS = 1,
+	TOKEN_ERROR = 2,
+	NOT_FIND = 3,
+};
+
+typedef struct st_RoomPlayer
+{
+	unsigned __int64 ClientID;
+	INT64 AccountNo;
+}RoomPlayerInfo;
+
+typedef struct st_BattleRoom
+{
+	int		ServerNo;
+	int		RoomNo;
+	int		MaxUser;
+	char	EnterToken[32];
+	std::list<RoomPlayerInfo> RoomPlayer;
+	SRWLOCK		Room_lock;
+}BATTLEROOM;
 
 class CGameLanClient;
 
@@ -96,6 +116,20 @@ public:
 	bool	DisconnectPlayer(unsigned __int64 ClientID, INT64 AccountNo);
 
 	//-----------------------------------------------------------
+	// 배틀 서버와 연결 끊겼을 경우 모든 방과 유저 끊기
+	//-----------------------------------------------------------
+	void	BattleDisconnect();
+
+	//-----------------------------------------------------------
+	// 배틀 방 찾기
+	//-----------------------------------------------------------
+	BATTLEROOM * FindBattleRoom(int RoomNo);
+
+	//-----------------------------------------------------------
+	// 배틀 방 갯수
+	//-----------------------------------------------------------
+	int		GetBattleRoomCount(void);
+	//-----------------------------------------------------------
 	// 접속 사용자 수 
 	//-----------------------------------------------------------
 	int		GetPlayerCount(void);
@@ -110,6 +144,12 @@ public:
 	// White IP 관련
 	//-----------------------------------------------------------
 	
+	//-----------------------------------------------------------
+	// 패킷처리 
+	//-----------------------------------------------------------
+	void	ReqChatLogin(CPacket * pPacket, CPlayer * pPlayer);
+	void	ReqEnterRoom(CPacket * pPacket, CPlayer * pPlayer);
+	void	ReqSendMsg(CPacket * pPacket, CPlayer * pPlayer);
 
 public:
 	CLanGameClient * _pGameServer;
@@ -117,14 +157,23 @@ public:
 	char	_CurConnectToken[32];
 	char	_OldConnectToken[32];
 
+	//-------------------------------------------------------------
+	// BattleRoom 방 관리
+	// 
+	// 방은 본 Map으로 관리함. 스레드 동기화를 위해 SRWLock을 사용한다.
+	//-------------------------------------------------------------
+	std::map<int, BATTLEROOM*> _BattleRoomMap;
+	SRWLOCK		_BattleRoom_lock;
+
+	CMemoryPool<BATTLEROOM>	*_BattleRoomPool;
+
 protected:
-	SRWLOCK	_DB_srwlock;
 	HANDLE	_hHeartbeatThread;
 
 	//-------------------------------------------------------------
 	// 접속자 관리.
 	// 
-	// 접속자는 본 리스트로 관리함.  스레드 동기화를 위해 SRWLock 을 사용한다.
+	// 접속자는 본 Map으로 관리함.  스레드 동기화를 위해 SRWLock을 사용한다.
 	//-------------------------------------------------------------
 	std::map<unsigned __int64, CPlayer*>	_PlayerMap;
 	SRWLOCK				_PlayerMap_srwlock;

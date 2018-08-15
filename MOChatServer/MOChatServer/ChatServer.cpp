@@ -2,11 +2,12 @@
 
 CChatServer::CChatServer()
 {
-	InitializeSRWLock(&_DB_srwlock);
+	InitializeSRWLock(&_BattleRoom_lock);
 	InitializeSRWLock(&_PlayerMap_srwlock);
 	ZeroMemory(&_CurConnectToken, sizeof(_CurConnectToken));
 	ZeroMemory(&_OldConnectToken, sizeof(_OldConnectToken));
 
+	_BattleRoomPool = new CMemoryPool<BATTLEROOM>();
 	_PlayerPool = new CMemoryPool<CPlayer>();
 	_pGameServer = new CLanGameClient;
 	_pGameServer->Constructor(this);
@@ -18,9 +19,9 @@ CChatServer::CChatServer()
 
 CChatServer::~CChatServer()
 {
+	delete _BattleRoomPool;
 	delete _PlayerPool;
 	delete _pGameServer;
-
 }
 
 void CChatServer::OnClientJoin(st_SessionInfo Info)
@@ -94,15 +95,34 @@ bool CChatServer::OnRecv(unsigned __int64 ClientID, CPacket *pPacket)
 	//-------------------------------------------------------------
 	//	패킷 처리 - 채팅 서버로 로그인 요청
 	//-------------------------------------------------------------
-
+	if (Type == en_PACKET_CS_CHAT_REQ_LOGIN)
+	{
+		ReqChatLogin(pPacket, pPlayer);
+		pPlayer->_Time = GetTickCount64();
+	}
 	//-------------------------------------------------------------
-	//	패킷 처리 -
+	//	패킷 처리 - 채팅 서버 방 입장
 	//-------------------------------------------------------------
-
+	else if (Type == en_PACKET_CS_CHAT_REQ_ENTER_ROOM)
+	{
+		ReqEnterRoom(pPacket, pPlayer);
+		pPlayer->_Time = GetTickCount64();
+	}
 	//-------------------------------------------------------------
-	//	패킷 처리 - 
+	//	패킷 처리 - 채팅 보내기 요청
 	//-------------------------------------------------------------
-	
+	else if (Type == en_PACKET_CS_CHAT_REQ_MESSAGE)
+	{
+		ReqSendMsg(pPacket, pPlayer);
+		pPlayer->_Time = GetTickCount64();
+	}
+	//-------------------------------------------------------------
+	//	패킷 처리 - 하트 비트
+	//-------------------------------------------------------------
+	else if (Type == en_PACKET_CS_CHAT_REQ_HEARTBEAT)
+	{
+		pPlayer->_Time = GetTickCount64();
+	}
 	return true;
 }
 
@@ -227,6 +247,49 @@ bool CChatServer::DisconnectPlayer(unsigned __int64 ClientID, INT64 AccountNo)
 	return true;
 }
 
+void CChatServer::BattleDisconnect()
+{
+	//	모든 방의 유저들 끊고 해당 방 파괴
+	AcquireSRWLockExclusive(&_BattleRoom_lock);
+	for (auto Map = _BattleRoomMap.begin(); Map != _BattleRoomMap.end();)
+	{
+		AcquireSRWLockExclusive(&(*Map).second->Room_lock);
+		for (auto RoomPlayer = (*Map).second->RoomPlayer.begin(); RoomPlayer != (*Map).second->RoomPlayer.end();)
+		{
+			Disconnect((*RoomPlayer).ClientID);
+			RoomPlayer = (*Map).second->RoomPlayer.erase(RoomPlayer);
+		}
+		ReleaseSRWLockExclusive(&(*Map).second->Room_lock);
+
+		_BattleRoomPool->Free((*Map).second);
+		Map = _BattleRoomMap.erase(Map);
+	}
+	ReleaseSRWLockExclusive(&_BattleRoom_lock);
+	return;
+}
+
+BATTLEROOM * CChatServer::FindBattleRoom(int RoomNo)
+{
+	std::map<int, BATTLEROOM*>::iterator iter;
+
+	AcquireSRWLockExclusive(&_BattleRoom_lock);
+	iter = _BattleRoomMap.find(RoomNo);
+	ReleaseSRWLockExclusive(&_BattleRoom_lock);
+
+	if (iter == _BattleRoomMap.end())
+		return nullptr;
+	else
+		return (*iter).second;
+}
+
+int CChatServer::GetBattleRoomCount()
+{
+	//-------------------------------------------------------------
+	//	현재 생성되어 있는 방 갯수 얻기
+	//-------------------------------------------------------------
+	return _BattleRoomMap.size();
+}
+
 int CChatServer::GetPlayerCount()
 {
 	//-------------------------------------------------------------
@@ -295,21 +358,145 @@ void CChatServer::MonitorThread_Update()
 
 			wprintf(L"	Connect User			:	%I64d	\n", m_iConnectClient);
 			wprintf(L"	PlayerMap User			:	%d		\n", GetPlayerCount());
-			wprintf(L"	LoginSuccess User Total		:	%d		\n", _JoinSession);
+			wprintf(L"	LoginSuccess User Total		:	%d\n", _JoinSession);
 			wprintf(L"	PacketPool Alloc		:	%d	\n", CPacket::GetAllocPool());
 			wprintf(L"	PacketPool Use			:	%d	\n", CPacket::_UseCount);
 			wprintf(L"	PlayerPool Alloc		:	%d	\n", _PlayerPool->GetAllocCount());
-			wprintf(L"	PlayerPool Use			:	%d	\n\n", _PlayerPool->GetUseCount());
-			wprintf(L"	MatchServer Accept Total	:	%I64d	\n", m_iAcceptTotal);
-			wprintf(L"	MatchServer Accept TPS		:	%I64d	\n", m_iAcceptTPS);
-			wprintf(L"	MatchServer Send KByte/s	:	%I64d	\n", m_iSendPacketTPS);
-			wprintf(L"	MatchServer Recv KByte/s	:	%I64d	\n", m_iRecvPacketTPS);
+			wprintf(L"	PlayerPool Use			:	%d	\n", _PlayerPool->GetUseCount());
+			wprintf(L"	BattleRoomPool Use		:	%d	\n", _BattleRoomPool->GetUseCount());
+			wprintf(L"	BattleRoomMap Size		:	%d	\n\n", GetBattleRoomCount());
 
+			wprintf(L"	ChatServer Accept Total	:	%I64d	\n", m_iAcceptTotal);
+			wprintf(L"	ChatServer Accept TPS		:	%I64d	\n", m_iAcceptTPS);
+			wprintf(L"	ChatServer Send KByte/s	:	%I64d	\n", m_iSendPacketTPS);
+			wprintf(L"	ChatServer Recv KByte/s	:	%I64d	\n", m_iRecvPacketTPS);
 		}
 		m_iAcceptTPS = 0;
 		m_iRecvPacketTPS = 0;
 		m_iSendPacketTPS = 0;
 	}
 	delete t;
+	return;
+}
+
+void CChatServer::ReqChatLogin(CPacket * pPacket, CPlayer * pPlayer)
+{
+	char ConnectToken[32] = { 0, };
+
+	*pPacket >> pPlayer->_AccountNo;
+	pPacket->PopData((char*)&pPlayer->_ID, sizeof(pPlayer->_ID));
+	pPacket->PopData((char*)&pPlayer->_Nickname, sizeof(pPlayer->_Nickname));
+	pPacket->PopData((char*)&ConnectToken, sizeof(ConnectToken));
+
+	CPacket * ResPacket = CPacket::Alloc();
+	WORD Type = en_PACKET_CS_CHAT_RES_LOGIN;
+	BYTE Status = LOGIN_SUCCESS;
+	//	연결토큰 맞는지 확인
+	if (0 != strncmp(ConnectToken, _CurConnectToken, sizeof(_CurConnectToken)))
+	{
+		if (0 != strncmp(ConnectToken, _OldConnectToken, sizeof(_OldConnectToken)))
+		{
+			//	다른경우 로그 남기고 ConnectToken 다름 패킷 전송
+			Status = LOGIN_FAIL;			
+		}
+	}
+	*ResPacket << Type << Status << pPlayer->_AccountNo;
+	SendPacket(pPlayer->_ClientID, ResPacket);
+	ResPacket->Free();
+	return;
+}
+
+void CChatServer::ReqEnterRoom(CPacket * pPacket, CPlayer * pPlayer)
+{
+	INT64 AccountNo = NULL;
+	int RoomNo = NULL;
+	char EnterToken[32] = { 0, };
+	BATTLEROOM * pRoom = nullptr;
+
+	*pPacket >> AccountNo >> RoomNo;
+	pPacket->PopData((char*)&EnterToken, sizeof(EnterToken));
+
+	CPacket * ResPacket = CPacket::Alloc();
+	WORD Type = en_PACKET_CS_CHAT_RES_ENTER_ROOM;
+
+	//	AccountNo 체크
+	if (pPlayer->_AccountNo != AccountNo)
+	{
+		
+	}
+
+	//	해당 방 검색
+	pRoom = FindBattleRoom(RoomNo);
+	if (nullptr == pRoom)
+	{
+		BYTE Status = NOT_FIND;
+		*ResPacket << Type << AccountNo << RoomNo << Status;
+		SendPacket(pPlayer->_ClientID, ResPacket);
+		ResPacket->Free();
+		return;
+	}
+
+	//	EnterToken 체크
+	if (0 != strncmp(EnterToken, pRoom->EnterToken, sizeof(pRoom->EnterToken)))
+	{
+		//	다른경우 로그 남기고 ConnectToken 다름 패킷 전송
+		BYTE Status = TOKEN_ERROR;
+		*ResPacket << Type << AccountNo << RoomNo << Status;
+		SendPacket(pPlayer->_ClientID, ResPacket);
+		ResPacket->Free();
+		return;
+	}
+
+	RoomPlayerInfo Info;
+	Info.AccountNo = pPlayer->_AccountNo;
+	Info.ClientID = pPlayer->_ClientID;
+
+	//	해당 방에 유저 넣음
+	AcquireSRWLockExclusive(&pRoom->Room_lock);
+	pRoom->RoomPlayer.push_back(Info);
+	ReleaseSRWLockExclusive(&pRoom->Room_lock);
+
+	//	배틀 서버로 응답
+	BYTE Status = SUCCESS;
+	*ResPacket << Type << AccountNo << RoomNo << Status;
+	SendPacket(pPlayer->_ClientID, ResPacket);
+	ResPacket->Free();
+
+	return;
+}
+
+void CChatServer::ReqSendMsg(CPacket * pPacket, CPlayer * pPlayer)
+{
+	INT64 AccountNo = NULL;
+	WORD MsgLen = NULL;
+
+	*pPacket >> AccountNo >> MsgLen;
+
+	WCHAR * pMsg = new WCHAR[MsgLen / 2];
+	pPacket->PopData(pMsg, MsgLen / 2);
+
+	//	채팅보내기 응답
+	CPacket * ResPacket = CPacket::Alloc();
+	WORD Type = en_PACKET_CS_CHAT_RES_MESSAGE;
+	*ResPacket << Type << AccountNo;
+	ResPacket->PushData((char*)&pPlayer->_ID, sizeof(pPlayer->_ID));
+	ResPacket->PushData((char*)&pPlayer->_Nickname, sizeof(pPlayer->_Nickname));
+	*ResPacket << MsgLen;
+	ResPacket->PushData(pMsg, MsgLen / 2);
+
+	ResPacket->AddRef();
+	BATTLEROOM * pRoom = FindBattleRoom(pPlayer->_RoomNo);
+	if (nullptr != pRoom)
+	{
+		AcquireSRWLockExclusive(&pRoom->Room_lock);
+		for (auto i = pRoom->RoomPlayer.begin(); i != pRoom->RoomPlayer.end(); i++)
+		{
+			SendPacket((*i).ClientID, ResPacket);
+			ResPacket->Free();
+		}
+		ReleaseSRWLockExclusive(&pRoom->Room_lock);
+	}
+	ResPacket->Free();
+	delete pMsg;
 	return;
 }

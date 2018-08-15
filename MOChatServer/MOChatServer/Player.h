@@ -23,7 +23,7 @@ public:
 	int		_RoomNo;
 	WCHAR	_ID[20];
 	WCHAR	_Nickname[20];
-	
+
 
 private:
 
