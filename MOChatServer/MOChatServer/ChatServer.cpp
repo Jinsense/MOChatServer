@@ -368,8 +368,8 @@ void CChatServer::MonitorThread_Update()
 
 			wprintf(L"	ChatServer Accept Total		:	%I64d	\n", m_iAcceptTotal);
 			wprintf(L"	ChatServer Accept TPS		:	%I64d	\n", m_iAcceptTPS);
-			wprintf(L"	ChatServer Send KByte/s		:	%I64d	\n", m_iSendPacketTPS);
-			wprintf(L"	ChatServer Recv KByte/s		:	%I64d	\n", m_iRecvPacketTPS);
+			wprintf(L"	ChatServer Send TPS		:	%I64d	\n", m_iSendPacketTPS);
+			wprintf(L"	ChatServer Recv TPS		:	%I64d	\n", m_iRecvPacketTPS);
 		}
 		m_iAcceptTPS = 0;
 		m_iRecvPacketTPS = 0;
@@ -397,6 +397,7 @@ void CChatServer::ReqChatLogin(CPacket * pPacket, CPlayer * pPlayer)
 		if (0 != strncmp(ConnectToken, _OldConnectToken, sizeof(_OldConnectToken)))
 		{
 			//	다른경우 로그 남기고 ConnectToken 다름 패킷 전송
+			_pLog->Log(const_cast<WCHAR*>(L"Error"), LOG_SYSTEM, const_cast<WCHAR*>(L"ConnectToken Not Same [AccountNo : %d]"), pPlayer->_AccountNo);
 			Status = LOGIN_FAIL;			
 		}
 	}
@@ -474,29 +475,26 @@ void CChatServer::ReqSendMsg(CPacket * pPacket, CPlayer * pPlayer)
 
 	WCHAR * pMsg = new WCHAR[MsgLen / 2];
 	pPacket->PopData(pMsg, MsgLen / 2);
-
-	//	채팅보내기 응답
-	CPacket * ResPacket = CPacket::Alloc();
-	WORD Type = en_PACKET_CS_CHAT_RES_MESSAGE;
-	*ResPacket << Type << AccountNo;
-	ResPacket->PushData((char*)&pPlayer->_ID, sizeof(pPlayer->_ID));
-	ResPacket->PushData((char*)&pPlayer->_Nickname, sizeof(pPlayer->_Nickname));
-	*ResPacket << MsgLen;
-	ResPacket->PushData(pMsg, MsgLen / 2);
-
-	ResPacket->AddRef();
+	
 	BATTLEROOM * pRoom = FindBattleRoom(pPlayer->_RoomNo);
 	if (nullptr != pRoom)
 	{
 		AcquireSRWLockExclusive(&pRoom->Room_lock);
 		for (auto i = pRoom->RoomPlayer.begin(); i != pRoom->RoomPlayer.end(); i++)
 		{
+			//	채팅보내기 응답
+			CPacket * ResPacket = CPacket::Alloc();
+			WORD Type = en_PACKET_CS_CHAT_RES_MESSAGE;
+			*ResPacket << Type << AccountNo;
+			ResPacket->PushData((char*)&pPlayer->_ID, sizeof(pPlayer->_ID));
+			ResPacket->PushData((char*)&pPlayer->_Nickname, sizeof(pPlayer->_Nickname));
+			*ResPacket << MsgLen;
+			ResPacket->PushData(pMsg, MsgLen / 2);
 			SendPacket((*i).ClientID, ResPacket);
 			ResPacket->Free();
 		}
 		ReleaseSRWLockExclusive(&pRoom->Room_lock);
 	}
-	ResPacket->Free();
-	delete pMsg;
+	delete[] pMsg;
 	return;
 }

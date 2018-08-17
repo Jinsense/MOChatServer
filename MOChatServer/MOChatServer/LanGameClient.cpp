@@ -53,6 +53,9 @@ void CLanGameClient::OnLeaveServer()
 	m_Session->bConnect = false;
 	m_bReConnect = true;
 	m_bRelease = true;
+
+	//	현재 존재하는 모든 방의 유저들을 종료시키고 모든 방을 파괴
+	_pChatServer->BattleDisconnect();
 	return;
 }
 
@@ -206,7 +209,8 @@ bool CLanGameClient::Disconnect()
 		pPacket->Free();
 		m_Session->PacketQ.Dequeue(sizeof(CPacket*));
 	}
-	m_Session->bConnect = false;
+
+	OnLeaveServer();
 
 	WaitForMultipleObjects(LANCLIENT_WORKERTHREAD, m_hWorker_Thread, false, INFINITE);
 
@@ -217,8 +221,6 @@ bool CLanGameClient::Disconnect()
 	}
 
 	WSACleanup();
-	//	현재 존재하는 모든 방의 유저들을 종료시키고 모든 방을 파괴
-	_pChatServer->BattleDisconnect();
 	return true;
 }
 
@@ -526,7 +528,7 @@ void CLanGameClient::ReqConnectToken(CPacket * pPacket)
 
 	CPacket * ResPacket = CPacket::Alloc();
 	WORD Type = en_PACKET_CHAT_BAT_RES_CONNECT_TOKEN;
-	*pPacket << Type << ReqSeqeunce;
+	*ResPacket << Type << ReqSeqeunce;
 	SendPacket(ResPacket);
 	ResPacket->Free();
 
@@ -586,12 +588,14 @@ void CLanGameClient::ReqDestryRoom(CPacket * pPacket)
 
 		_pChatServer->_BattleRoomPool->Free(pRoom);
 		AcquireSRWLockExclusive(&_pChatServer->_BattleRoom_lock);
-		_pChatServer->_BattleRoomMap.erase(pRoom->RoomNo);
+		_pChatServer->_BattleRoomMap.erase(RoomNo);
 		ReleaseSRWLockExclusive(&_pChatServer->_BattleRoom_lock);
 	}
 	//	배틀 서버에 수신응답
 	CPacket * ResPacket = CPacket::Alloc();
 	WORD Type = en_PACKET_CHAT_BAT_RES_DESTROY_ROOM;
 	*ResPacket << Type << RoomNo << ReqSequence;
+	ResPacket->Free();
 	return;
 }
+
