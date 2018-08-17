@@ -366,10 +366,10 @@ void CChatServer::MonitorThread_Update()
 			wprintf(L"	BattleRoomPool Use		:	%d	\n", _BattleRoomPool->GetUseCount());
 			wprintf(L"	BattleRoomMap Size		:	%d	\n\n", GetBattleRoomCount());
 
-			wprintf(L"	ChatServer Accept Total	:	%I64d	\n", m_iAcceptTotal);
+			wprintf(L"	ChatServer Accept Total		:	%I64d	\n", m_iAcceptTotal);
 			wprintf(L"	ChatServer Accept TPS		:	%I64d	\n", m_iAcceptTPS);
-			wprintf(L"	ChatServer Send KByte/s	:	%I64d	\n", m_iSendPacketTPS);
-			wprintf(L"	ChatServer Recv KByte/s	:	%I64d	\n", m_iRecvPacketTPS);
+			wprintf(L"	ChatServer Send KByte/s		:	%I64d	\n", m_iSendPacketTPS);
+			wprintf(L"	ChatServer Recv KByte/s		:	%I64d	\n", m_iRecvPacketTPS);
 		}
 		m_iAcceptTPS = 0;
 		m_iRecvPacketTPS = 0;
