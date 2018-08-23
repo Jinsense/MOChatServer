@@ -305,11 +305,21 @@ int CChatServer::GetPlayerCount()
 
 CPlayer* CChatServer::FindPlayer_ClientID(unsigned __int64 ClientID)
 {
-	CPlayer *pPlayer = nullptr;
+	bool Find = false;
+	std::map<unsigned __int64, CPlayer*>::iterator iter;
+	
 	AcquireSRWLockExclusive(&_PlayerMap_srwlock);
-	pPlayer = _PlayerMap.find(ClientID)->second;
+	iter = _PlayerMap.find(ClientID);
+	if (iter == _PlayerMap.end())
+		Find = false;
+	else
+		Find = true;
 	ReleaseSRWLockExclusive(&_PlayerMap_srwlock);
-	return pPlayer;
+
+	if (false == Find)
+		return nullptr;
+	else
+		return (*iter).second;
 }
 
 unsigned __int64 CChatServer::FindPlayer_AccountNo(INT64 AccountNo)
@@ -457,12 +467,14 @@ void CChatServer::ReqEnterRoom(CPacket * pPacket, CPlayer * pPlayer)
 	Info.AccountNo = pPlayer->_AccountNo;
 	Info.ClientID = pPlayer->_ClientID;
 
+	pPlayer->_RoomNo = RoomNo;
+
 	//	해당 방에 유저 넣음
 	AcquireSRWLockExclusive(&pRoom->Room_lock);
 	pRoom->RoomPlayer.push_back(Info);
 	ReleaseSRWLockExclusive(&pRoom->Room_lock);
 
-	pPlayer->_RoomNo = RoomNo;
+	
 
 	//	배틀 서버로 응답
 	BYTE Status = SUCCESS;
@@ -486,21 +498,43 @@ void CChatServer::ReqSendMsg(CPacket * pPacket, CPlayer * pPlayer)
 	BATTLEROOM * pRoom = FindBattleRoom(pPlayer->_RoomNo);
 	if (nullptr != pRoom)
 	{
+		//	클라이언트ID만 얻는다
+		unsigned __int64 ClientID[6] = { 0, };
+		int num = 0;
 		AcquireSRWLockExclusive(&pRoom->Room_lock);
 		for (auto i = pRoom->RoomPlayer.begin(); i != pRoom->RoomPlayer.end(); i++)
 		{
-			//	채팅보내기 응답
-			CPacket * ResPacket = CPacket::Alloc();
-			WORD Type = en_PACKET_CS_CHAT_RES_MESSAGE;
-			*ResPacket << Type << AccountNo;
-			ResPacket->PushData((char*)&pPlayer->_ID, sizeof(pPlayer->_ID));
-			ResPacket->PushData((char*)&pPlayer->_Nickname, sizeof(pPlayer->_Nickname));
-			*ResPacket << MsgLen;
-			ResPacket->PushData(pMsg, MsgLen / 2);
-			SendPacket((*i).ClientID, ResPacket);
-			ResPacket->Free();
+			ClientID[num] = (*i).ClientID;
+			num++;
+			////	채팅보내기 응답
+			//CPacket * ResPacket = CPacket::Alloc();
+			//WORD Type = en_PACKET_CS_CHAT_RES_MESSAGE;
+			//*ResPacket << Type << AccountNo;
+			//ResPacket->PushData((char*)&pPlayer->_ID, sizeof(pPlayer->_ID));
+			//ResPacket->PushData((char*)&pPlayer->_Nickname, sizeof(pPlayer->_Nickname));
+			//*ResPacket << MsgLen;
+			//ResPacket->PushData(pMsg, MsgLen / 2);
+			//SendPacket((*i).ClientID, ResPacket);
+			//ResPacket->Free();
 		}
 		ReleaseSRWLockExclusive(&pRoom->Room_lock);
+
+		//	해당 클라이언트ID로 채팅 메세지 응답
+		for (int k = 0; k < 6; k++)
+		{
+			if (NULL != ClientID[k])
+			{
+				CPacket * ResPacket = CPacket::Alloc();
+				WORD Type = en_PACKET_CS_CHAT_RES_MESSAGE;
+				*ResPacket << Type << AccountNo;
+				ResPacket->PushData((char*)&pPlayer->_ID, sizeof(pPlayer->_ID));
+				ResPacket->PushData((char*)&pPlayer->_Nickname, sizeof(pPlayer->_Nickname));
+				*ResPacket << MsgLen;
+				ResPacket->PushData(pMsg, MsgLen / 2);
+				SendPacket(ClientID[k], ResPacket);
+				ResPacket->Free();
+			}
+		}		
 	}
 	delete[] pMsg;
 	return;

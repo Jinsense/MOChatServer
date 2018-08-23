@@ -13,7 +13,7 @@
 #include "Dump.h"
 
 #define		MAX_WSABUF_NUMBER		300
-#define		MAX_QUEUE_SIZE			4000
+#define		MAX_QUEUE_SIZE			8000
 
 #define		SET_INDEX(Index, SessionKey)		Index = Index << 48; SessionKey = Index | SessionKey;
 #define		GET_INDEX(Index, SessionKey)		Index = SessionKey >> 48;
