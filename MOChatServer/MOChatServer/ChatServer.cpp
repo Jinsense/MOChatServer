@@ -77,7 +77,7 @@ bool CChatServer::OnRecv(unsigned __int64 ClientID, CPacket *pPacket)
 	//-------------------------------------------------------------
 	//	모니터링 측정 변수
 	//-------------------------------------------------------------
-	m_iRecvPacketTPS++;
+	InterlockedIncrement(&m_iRecvPacketTPS);
 	//-------------------------------------------------------------
 	//	예외 처리 - 현재 존재하는 유저인지 검사
 	//-------------------------------------------------------------
@@ -270,13 +270,18 @@ void CChatServer::BattleDisconnect()
 
 BATTLEROOM * CChatServer::FindBattleRoom(int RoomNo)
 {
+	bool Find = false;
 	std::map<int, BATTLEROOM*>::iterator iter;
 
 	AcquireSRWLockExclusive(&_BattleRoom_lock);
 	iter = _BattleRoomMap.find(RoomNo);
+	if (iter == _BattleRoomMap.end())
+		Find = false;
+	else
+		Find = true;
 	ReleaseSRWLockExclusive(&_BattleRoom_lock);
 
-	if (iter == _BattleRoomMap.end())
+	if (false == Find)
 		return nullptr;
 	else
 		return (*iter).second;
@@ -456,6 +461,8 @@ void CChatServer::ReqEnterRoom(CPacket * pPacket, CPlayer * pPlayer)
 	AcquireSRWLockExclusive(&pRoom->Room_lock);
 	pRoom->RoomPlayer.push_back(Info);
 	ReleaseSRWLockExclusive(&pRoom->Room_lock);
+
+	pPlayer->_RoomNo = RoomNo;
 
 	//	배틀 서버로 응답
 	BYTE Status = SUCCESS;

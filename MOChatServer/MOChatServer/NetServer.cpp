@@ -190,7 +190,7 @@ bool CNetServer::SendPacket(unsigned __int64 iClientID, CPacket *pPacket)
 
 	if (pSessionArray[_iIndex].iClientID == iClientID)
 	{
-		m_iSendPacketTPS++;
+		InterlockedIncrement(&m_iSendPacketTPS);
 		pPacket->AddRef();
 		pPacket->EnCode();
 		pSessionArray[_iIndex].SendQ.Enqueue(pPacket);
@@ -226,7 +226,7 @@ bool CNetServer::SendPacketAndDisConnect(unsigned __int64 iClientID, CPacket *pP
 
 	if (pSessionArray[_iIndex].iClientID == iClientID)
 	{
-		m_iSendPacketTPS++;
+		InterlockedIncrement(&m_iSendPacketTPS);
 		pPacket->AddRef();
 		pPacket->EnCode();
 		pSessionArray[_iIndex].SendQ.Enqueue(pPacket);
