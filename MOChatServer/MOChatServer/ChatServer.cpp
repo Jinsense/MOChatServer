@@ -34,11 +34,14 @@ void CChatServer::OnClientJoin(st_SessionInfo Info)
 	pPlayer->_ClientID = Info.iClientID;
 	pPlayer->_Time = GetTickCount64();
 	InsertPlayer(pPlayer->_ClientID, pPlayer);
+//	_pLog->Log(const_cast<WCHAR*>(L"Test"), LOG_SYSTEM, const_cast<WCHAR*>(L"Accept [ClientID : %d]"), pPlayer->_ClientID);
+
 	return;
 }
 
 void CChatServer::OnClientLeave(unsigned __int64 ClientID)
 {
+
 	CPlayer * pPlayer = FindPlayer_ClientID(ClientID);
 	if (nullptr == pPlayer)
 	{
@@ -249,12 +252,14 @@ bool CChatServer::DisconnectPlayer(unsigned __int64 ClientID, INT64 AccountNo)
 
 void CChatServer::BattleDisconnect()
 {
+	std::map<int, BATTLEROOM*>::iterator Map;
 	//	모든 방의 유저들 끊고 해당 방 파괴
 	AcquireSRWLockExclusive(&_BattleRoom_lock);
-	for (auto Map = _BattleRoomMap.begin(); Map != _BattleRoomMap.end();)
+	for (Map = _BattleRoomMap.begin(); Map != _BattleRoomMap.end();)
 	{
+		std::list<RoomPlayerInfo>::iterator RoomPlayer;
 		AcquireSRWLockExclusive(&(*Map).second->Room_lock);
-		for (auto RoomPlayer = (*Map).second->RoomPlayer.begin(); RoomPlayer != (*Map).second->RoomPlayer.end();)
+		for (RoomPlayer = (*Map).second->RoomPlayer.begin(); RoomPlayer != (*Map).second->RoomPlayer.end();)
 		{
 			Disconnect((*RoomPlayer).ClientID);
 			RoomPlayer = (*Map).second->RoomPlayer.erase(RoomPlayer);
@@ -324,13 +329,14 @@ CPlayer* CChatServer::FindPlayer_ClientID(unsigned __int64 ClientID)
 
 unsigned __int64 CChatServer::FindPlayer_AccountNo(INT64 AccountNo)
 {
+	std::map<unsigned __int64, CPlayer*>::iterator iter;
 	unsigned __int64 ClientID = NULL;
 	AcquireSRWLockExclusive(&_PlayerMap_srwlock);
-	for (auto i = _PlayerMap.begin(); i != _PlayerMap.end(); i++)
+	for (iter = _PlayerMap.begin(); iter != _PlayerMap.end(); iter++)
 	{
-		if (i->second->_AccountNo == AccountNo)
+		if ((*iter).second->_AccountNo == AccountNo)
 		{
-			ClientID = i->second->_ClientID;
+			ClientID = (*iter).second->_ClientID;
 			break;
 		}
 	}
@@ -475,16 +481,16 @@ void CChatServer::ReqEnterRoom(CPacket * pPacket, CPlayer * pPlayer)
 
 	pPlayer->_RoomNo = RoomNo;
 
-	//	해당 방에 유저 넣음
-	AcquireSRWLockExclusive(&pRoom->Room_lock);
-	pRoom->RoomPlayer.push_back(Info);
-	ReleaseSRWLockExclusive(&pRoom->Room_lock);	
-
-	//	배틀 서버로 응답
+	//	방 입장 응답
 	BYTE Status = SUCCESS;
 	*ResPacket << Type << AccountNo << RoomNo << Status;
 	SendPacket(pPlayer->_ClientID, ResPacket);
 	ResPacket->Free();
+	
+	//	해당 방에 유저 넣음
+	AcquireSRWLockExclusive(&pRoom->Room_lock);
+	pRoom->RoomPlayer.push_back(Info);
+	ReleaseSRWLockExclusive(&pRoom->Room_lock);
 
 	return;
 }
@@ -519,23 +525,15 @@ void CChatServer::ReqSendMsg(CPacket * pPacket, CPlayer * pPlayer)
 		{
 			ClientID[num] = (*i).ClientID;
 			num++;
-			////	채팅보내기 응답
-			//CPacket * ResPacket = CPacket::Alloc();
-			//WORD Type = en_PACKET_CS_CHAT_RES_MESSAGE;
-			//*ResPacket << Type << AccountNo;
-			//ResPacket->PushData((char*)&pPlayer->_ID, sizeof(pPlayer->_ID));
-			//ResPacket->PushData((char*)&pPlayer->_Nickname, sizeof(pPlayer->_Nickname));
-			//*ResPacket << MsgLen;
-			//ResPacket->PushData(pMsg, MsgLen / 2);
-			//SendPacket((*i).ClientID, ResPacket);
-			//ResPacket->Free();
+			if (num > 6)
+				g_CrashDump->Crash();
 		}
 		ReleaseSRWLockExclusive(&pRoom->Room_lock);
 
 		//	해당 클라이언트ID로 채팅 메세지 응답
 		for (int k = 0; k < 6; k++)
 		{
-			if (NULL != ClientID[k])
+			if (NULL != ClientID[k] && pPlayer->_AccountNo == AccountNo)
 			{
 				CPacket * ResPacket = CPacket::Alloc();
 				WORD Type = en_PACKET_CS_CHAT_RES_MESSAGE;
@@ -544,6 +542,7 @@ void CChatServer::ReqSendMsg(CPacket * pPacket, CPlayer * pPlayer)
 				ResPacket->PushData((char*)&pPlayer->_Nickname, sizeof(pPlayer->_Nickname));
 				*ResPacket << MsgLen;
 				ResPacket->PushData(pMsg, MsgLen / 2);
+				
 				SendPacket(ClientID[k], ResPacket);
 				ResPacket->Free();
 			}

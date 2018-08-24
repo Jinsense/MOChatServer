@@ -334,8 +334,8 @@ bool CNetServer::ClientRelease(st_Session *pSession)
 	}*/
 
 	OnClientLeave(iSessionKey);
-
-	unsigned __int64 iIndex = GET_INDEX(iIndex, iSessionKey);
+	unsigned __int64 Key = iSessionKey;
+	unsigned __int64 iIndex = GET_INDEX(iIndex, Key);
 
 	InterlockedDecrement(&m_iConnectClient);
 	closesocket(pSession->sock);

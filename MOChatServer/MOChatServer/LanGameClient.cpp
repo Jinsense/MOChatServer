@@ -578,11 +578,12 @@ void CLanGameClient::ReqDestryRoom(CPacket * pPacket)
 	}
 	else
 	{
+		std::list<RoomPlayerInfo>::iterator iter;
 		AcquireSRWLockExclusive(&pRoom->Room_lock);
-		for (auto i = pRoom->RoomPlayer.begin(); i != pRoom->RoomPlayer.end();)
+		for (iter = pRoom->RoomPlayer.begin(); iter != pRoom->RoomPlayer.end();)
 		{
-			_pChatServer->Disconnect((*i).ClientID);
-			i = pRoom->RoomPlayer.erase(i);
+			_pChatServer->Disconnect((*iter).ClientID);
+			iter = pRoom->RoomPlayer.erase(iter);
 		}
 		ReleaseSRWLockExclusive(&pRoom->Room_lock);
 
