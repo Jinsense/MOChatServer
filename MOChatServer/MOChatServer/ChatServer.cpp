@@ -436,9 +436,15 @@ void CChatServer::ReqEnterRoom(CPacket * pPacket, CPlayer * pPlayer)
 	WORD Type = en_PACKET_CS_CHAT_RES_ENTER_ROOM;
 
 	//	AccountNo 체크
-	if (pPlayer->_AccountNo != AccountNo)
+	if (pPlayer->_AccountNo != AccountNo && NULL != AccountNo)
 	{
-		
+		//	다른경우 로그 남기고 방 입장 실패 전송
+		_pLog->Log(const_cast<WCHAR*>(L"Error"), LOG_SYSTEM, const_cast<WCHAR*>(L"ReqEnterRoom - AccountNo Not Same [My AccountNo : %d, Recv AccountNo]"), pPlayer->_AccountNo, AccountNo);
+		BYTE Status = TOKEN_ERROR;
+		*ResPacket << Type << AccountNo << RoomNo << Status;
+		SendPacket(pPlayer->_ClientID, ResPacket);
+		ResPacket->Free();
+		return;
 	}
 
 	//	해당 방 검색
@@ -446,7 +452,7 @@ void CChatServer::ReqEnterRoom(CPacket * pPacket, CPlayer * pPlayer)
 	if (nullptr == pRoom)
 	{
 		BYTE Status = NOT_FIND;
-		*ResPacket << Type << AccountNo << RoomNo << Status;
+		*ResPacket << Type << pPlayer->_AccountNo << RoomNo << Status;
 		SendPacket(pPlayer->_ClientID, ResPacket);
 		ResPacket->Free();
 		return;
@@ -457,7 +463,7 @@ void CChatServer::ReqEnterRoom(CPacket * pPacket, CPlayer * pPlayer)
 	{
 		//	다른경우 로그 남기고 ConnectToken 다름 패킷 전송
 		BYTE Status = TOKEN_ERROR;
-		*ResPacket << Type << AccountNo << RoomNo << Status;
+		*ResPacket << Type << pPlayer->_AccountNo << RoomNo << Status;
 		SendPacket(pPlayer->_ClientID, ResPacket);
 		ResPacket->Free();
 		return;
@@ -472,9 +478,7 @@ void CChatServer::ReqEnterRoom(CPacket * pPacket, CPlayer * pPlayer)
 	//	해당 방에 유저 넣음
 	AcquireSRWLockExclusive(&pRoom->Room_lock);
 	pRoom->RoomPlayer.push_back(Info);
-	ReleaseSRWLockExclusive(&pRoom->Room_lock);
-
-	
+	ReleaseSRWLockExclusive(&pRoom->Room_lock);	
 
 	//	배틀 서버로 응답
 	BYTE Status = SUCCESS;
@@ -491,6 +495,15 @@ void CChatServer::ReqSendMsg(CPacket * pPacket, CPlayer * pPlayer)
 	WORD MsgLen = NULL;
 
 	*pPacket >> AccountNo >> MsgLen;
+
+	//	AccountNo 체크
+	if (pPlayer->_AccountNo != AccountNo && NULL != AccountNo)
+	{
+		//	다른경우 로그
+		_pLog->Log(const_cast<WCHAR*>(L"Error"), LOG_SYSTEM, const_cast<WCHAR*>(L"ReqSendMsg - AccountNo Not Same [My AccountNo : %d, Recv AccountNo]"), pPlayer->_AccountNo, AccountNo);
+		Disconnect(pPlayer->_ClientID);
+		return;
+	}
 
 	WCHAR * pMsg = new WCHAR[MsgLen / 2];
 	pPacket->PopData(pMsg, MsgLen / 2);
