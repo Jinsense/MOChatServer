@@ -49,6 +49,26 @@ void CChatServer::OnClientLeave(unsigned __int64 ClientID)
 		return;
 	}
 	//-------------------------------------------------------------
+	//	방의 RoomPlayer에서 삭제
+	//-------------------------------------------------------------
+	BATTLEROOM * pRoom = FindBattleRoom(pPlayer->_RoomNo);
+	if (nullptr != pRoom)
+	{
+		std::list<RoomPlayerInfo>::iterator iter;
+		AcquireSRWLockExclusive(&pRoom->Room_lock);
+		for (iter = pRoom->RoomPlayer.begin(); iter != pRoom->RoomPlayer.end();)
+		{
+			if ((*iter).AccountNo == pPlayer->_AccountNo)
+			{
+				_pLog->Log(const_cast<WCHAR*>(L"LeaveRoom"), LOG_SYSTEM, const_cast<WCHAR*>(L"[RoomNo : %d] AccountNo : %d"), pRoom->RoomNo, pPlayer->_AccountNo);
+				iter = pRoom->RoomPlayer.erase(iter);	
+				break;
+			}
+		}
+		ReleaseSRWLockExclusive(&pRoom->Room_lock);
+	}
+
+	//-------------------------------------------------------------
 	//	맵에 유저 삭제
 	//-------------------------------------------------------------
 	RemovePlayer(ClientID);
@@ -487,6 +507,8 @@ void CChatServer::ReqEnterRoom(CPacket * pPacket, CPlayer * pPlayer)
 	SendPacket(pPlayer->_ClientID, ResPacket);
 	ResPacket->Free();
 	
+	_pLog->Log(const_cast<WCHAR*>(L"EnterRoom"), LOG_SYSTEM, const_cast<WCHAR*>(L"[RoomNo : %d] AccountNo : %d"), pRoom->RoomNo, pPlayer->_AccountNo);
+
 	//	해당 방에 유저 넣음
 	AcquireSRWLockExclusive(&pRoom->Room_lock);
 	pRoom->RoomPlayer.push_back(Info);
