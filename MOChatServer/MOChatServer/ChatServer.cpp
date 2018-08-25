@@ -51,27 +51,25 @@ void CChatServer::OnClientLeave(unsigned __int64 ClientID)
 	
 	//-------------------------------------------------------------
 	//	방의 RoomPlayer에서 삭제
-	//-------------------------------------------------------------
-	if (false == pPlayer->_Release)
+	//-------------------------------------------------------------	
+	BATTLEROOM * pRoom = FindBattleRoom(pPlayer->_RoomNo);
+	if (nullptr != pRoom)
 	{
-		BATTLEROOM * pRoom = FindBattleRoom(pPlayer->_RoomNo);
-		if (nullptr != pRoom)
+		std::list<RoomPlayerInfo>::iterator iter;
+		AcquireSRWLockExclusive(&pRoom->Room_lock);
+		for (iter = pRoom->RoomPlayer.begin(); iter != pRoom->RoomPlayer.end();)
 		{
-			std::list<RoomPlayerInfo>::iterator iter;
-			AcquireSRWLockExclusive(&pRoom->Room_lock);
-			for (iter = pRoom->RoomPlayer.begin(); iter != pRoom->RoomPlayer.end();)
+			if ((*iter).AccountNo == pPlayer->_AccountNo)
 			{
-				if ((*iter).AccountNo == pPlayer->_AccountNo)
-				{
-					_pLog->Log(const_cast<WCHAR*>(L"LeaveRoom"), LOG_SYSTEM, const_cast<WCHAR*>(L"[RoomNo : %d] AccountNo : %d"), pRoom->RoomNo, pPlayer->_AccountNo);
-					iter = pRoom->RoomPlayer.erase(iter);
-				}
-				else
-					iter++;
+				_pLog->Log(const_cast<WCHAR*>(L"LeaveRoom"), LOG_SYSTEM, const_cast<WCHAR*>(L"[RoomNo : %d] AccountNo : %d"), pRoom->RoomNo, pPlayer->_AccountNo);
+				iter = pRoom->RoomPlayer.erase(iter);
 			}
-			ReleaseSRWLockExclusive(&pRoom->Room_lock);
+			else
+				iter++;
 		}
+		ReleaseSRWLockExclusive(&pRoom->Room_lock);
 	}
+	
 	//-------------------------------------------------------------
 	//	맵에 유저 삭제
 	//-------------------------------------------------------------

@@ -14,7 +14,6 @@ CPlayer::~CPlayer()
 
 void CPlayer::Init()
 {
-	InterlockedExchange(&_Release, false);
 	_ClientID = NULL;
 	_Time = NULL;
 	_AccountNo = NULL;
