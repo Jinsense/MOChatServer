@@ -582,6 +582,7 @@ void CLanGameClient::ReqDestryRoom(CPacket * pPacket)
 		AcquireSRWLockExclusive(&pRoom->Room_lock);
 		for (iter = pRoom->RoomPlayer.begin(); iter != pRoom->RoomPlayer.end();)
 		{
+			InterlockedExchange(&(*iter).pPlayer->_Release, true);
 			_pChatServer->Disconnect((*iter).ClientID);
 			iter = pRoom->RoomPlayer.erase(iter);
 		}

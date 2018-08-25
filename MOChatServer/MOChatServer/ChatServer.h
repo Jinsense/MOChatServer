@@ -34,6 +34,7 @@ typedef struct st_RoomPlayer
 {
 	unsigned __int64 ClientID;
 	INT64 AccountNo;
+	CPlayer * pPlayer;
 }RoomPlayerInfo;
 
 typedef struct st_BattleRoom

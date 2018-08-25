@@ -48,26 +48,30 @@ void CChatServer::OnClientLeave(unsigned __int64 ClientID)
 		_pLog->Log(const_cast<WCHAR*>(L"Error"), LOG_SYSTEM, const_cast<WCHAR*>(L"FindClientID Fail [ClientID : %d]"), ClientID);
 		return;
 	}
+	
 	//-------------------------------------------------------------
 	//	방의 RoomPlayer에서 삭제
 	//-------------------------------------------------------------
-	BATTLEROOM * pRoom = FindBattleRoom(pPlayer->_RoomNo);
-	if (nullptr != pRoom)
+	if (false == pPlayer->_Release)
 	{
-		std::list<RoomPlayerInfo>::iterator iter;
-		AcquireSRWLockExclusive(&pRoom->Room_lock);
-		for (iter = pRoom->RoomPlayer.begin(); iter != pRoom->RoomPlayer.end();)
+		BATTLEROOM * pRoom = FindBattleRoom(pPlayer->_RoomNo);
+		if (nullptr != pRoom)
 		{
-			if ((*iter).AccountNo == pPlayer->_AccountNo)
+			std::list<RoomPlayerInfo>::iterator iter;
+			AcquireSRWLockExclusive(&pRoom->Room_lock);
+			for (iter = pRoom->RoomPlayer.begin(); iter != pRoom->RoomPlayer.end();)
 			{
-				_pLog->Log(const_cast<WCHAR*>(L"LeaveRoom"), LOG_SYSTEM, const_cast<WCHAR*>(L"[RoomNo : %d] AccountNo : %d"), pRoom->RoomNo, pPlayer->_AccountNo);
-				iter = pRoom->RoomPlayer.erase(iter);	
-				break;
+				if ((*iter).AccountNo == pPlayer->_AccountNo)
+				{
+					_pLog->Log(const_cast<WCHAR*>(L"LeaveRoom"), LOG_SYSTEM, const_cast<WCHAR*>(L"[RoomNo : %d] AccountNo : %d"), pRoom->RoomNo, pPlayer->_AccountNo);
+					iter = pRoom->RoomPlayer.erase(iter);
+				}
+				else
+					iter++;
 			}
+			ReleaseSRWLockExclusive(&pRoom->Room_lock);
 		}
-		ReleaseSRWLockExclusive(&pRoom->Room_lock);
 	}
-
 	//-------------------------------------------------------------
 	//	맵에 유저 삭제
 	//-------------------------------------------------------------
@@ -498,6 +502,7 @@ void CChatServer::ReqEnterRoom(CPacket * pPacket, CPlayer * pPlayer)
 	RoomPlayerInfo Info;
 	Info.AccountNo = pPlayer->_AccountNo;
 	Info.ClientID = pPlayer->_ClientID;
+	Info.pPlayer = pPlayer;
 
 	pPlayer->_RoomNo = RoomNo;
 
