@@ -578,21 +578,28 @@ void CLanGameClient::ReqDestryRoom(CPacket * pPacket)
 	}
 	else
 	{
+		int num = 0;
+		unsigned __int64 ClientID[6] = { 0, };
 		std::list<RoomPlayerInfo>::iterator iter;
 		AcquireSRWLockExclusive(&pRoom->Room_lock);
 		for (iter = pRoom->RoomPlayer.begin(); iter != pRoom->RoomPlayer.end();)
 		{
 			_pChatServer->_pLog->Log(const_cast<WCHAR*>(L"DestryRoom"), LOG_SYSTEM, const_cast<WCHAR*>(L"[RoomNo : %d] AccountNo : %d"), pRoom->RoomNo, (*iter).AccountNo);
 
-			_pChatServer->Disconnect((*iter).ClientID);
+//			_pChatServer->Disconnect((*iter).ClientID);
+			ClientID[num] = (*iter).ClientID;
+			num++;
 			iter = pRoom->RoomPlayer.erase(iter);
 		}
 		ReleaseSRWLockExclusive(&pRoom->Room_lock);
 
-		_pChatServer->_BattleRoomPool->Free(pRoom);
 		AcquireSRWLockExclusive(&_pChatServer->_BattleRoom_lock);
 		_pChatServer->_BattleRoomMap.erase(RoomNo);
 		ReleaseSRWLockExclusive(&_pChatServer->_BattleRoom_lock);
+		_pChatServer->_BattleRoomPool->Free(pRoom);
+
+		for (int i = 0; i < num; i++)
+			_pChatServer->Disconnect(ClientID[i]);
 	}
 	//	배틀 서버에 수신응답
 	CPacket * ResPacket = CPacket::Alloc();
