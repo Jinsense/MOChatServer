@@ -298,6 +298,7 @@ void CChatServer::BattleDisconnect()
 BATTLEROOM * CChatServer::FindBattleRoom(int RoomNo)
 {
 	bool Find = false;
+	BATTLEROOM * pRoom = nullptr;
 	std::map<int, BATTLEROOM*>::iterator iter;
 
 	AcquireSRWLockExclusive(&_BattleRoom_lock);
@@ -305,13 +306,16 @@ BATTLEROOM * CChatServer::FindBattleRoom(int RoomNo)
 	if (iter == _BattleRoomMap.end())
 		Find = false;
 	else
+	{
 		Find = true;
+		pRoom = (*iter).second;
+	}
 	ReleaseSRWLockExclusive(&_BattleRoom_lock);
 
 	if (false == Find)
 		return nullptr;
 	else
-		return (*iter).second;
+		return pRoom;
 }
 
 int CChatServer::GetBattleRoomCount()
