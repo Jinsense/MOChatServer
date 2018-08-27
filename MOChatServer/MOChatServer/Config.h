@@ -33,7 +33,6 @@ public:
 	//	SYSTEM
 	int WORKER_THREAD;
 	int SERVER_TIMEOUT;
-	int USER_TIMEOUT;
 	int CLIENT_MAX;
 	int PACKET_CODE;
 	int PACKET_KEY1;
