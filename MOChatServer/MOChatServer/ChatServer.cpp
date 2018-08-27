@@ -172,20 +172,20 @@ void CChatServer::HeartbeatThread_Update()
 		AcquireSRWLockExclusive(&_PlayerMap_srwlock);
 		for (auto i = _PlayerMap.begin(); i != _PlayerMap.end(); i++)
 		{
-		if (now - i->second->_Time > _Config.USER_TIMEOUT)
-		{
-		_pLog->Log(const_cast<WCHAR*>(L"HeartBeat"), LOG_SYSTEM, const_cast<WCHAR*>(L"USER TIMEOUT : %d [AccountNo : %d]"), now - i->second->_Time, i->second->_AccountNo);
-		//	바로 Disconnect 하면 데드락 위험성
-		//	임시 stack에 넣고 마지막에 Disconnect 호출할 것
-		temp.push(i->second->_ClientID);
-		}
+			if (now - i->second->_Time > _Config.USER_TIMEOUT)
+			{
+				_pLog->Log(const_cast<WCHAR*>(L"HeartBeat"), LOG_SYSTEM, const_cast<WCHAR*>(L"USER TIMEOUT : %I64d [AccountNo : %d]"), now - i->second->_Time, i->second->_AccountNo);
+				//	바로 Disconnect 하면 데드락 위험성
+				//	임시 stack에 넣고 마지막에 Disconnect 호출할 것
+				temp.push(i->second->_ClientID);
+			}
 		}
 		ReleaseSRWLockExclusive(&_PlayerMap_srwlock);
 		while (!temp.empty())
 		{
-		unsigned __int64 ClientID = temp.top();
-		Disconnect(ClientID);
-		temp.pop();
+			unsigned __int64 ClientID = temp.top();
+			Disconnect(ClientID);
+			temp.pop();
 		}
 		
 	}
