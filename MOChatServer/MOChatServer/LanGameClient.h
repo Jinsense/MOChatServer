@@ -35,7 +35,7 @@ public:
 	//-------------------------------------------------------------
 	void ReqConnectToken(CPacket * pPacket);
 	void ReqCreateRoom(CPacket * pPacket);
-	void ReqDestryRoom(CPacket * pPacket);
+	void ReqDestroyRoom(CPacket * pPacket);
 	//-------------------------------------------------------------
 	//	사용자 함수
 	//-------------------------------------------------------------

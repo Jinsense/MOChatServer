@@ -20,6 +20,7 @@ CConfig::CConfig()
 	WORKER_THREAD = NULL;
 	SERVER_TIMEOUT = NULL;
 	CLIENT_MAX = NULL;
+	USER_TIMEOUT = NULL;
 	PACKET_CODE = NULL;
 	PACKET_KEY1 = NULL;
 	PACKET_KEY2 = NULL;
@@ -65,8 +66,9 @@ bool CConfig::Set()
 	res = _Parse.GetValue("WORKER_THREAD", &WORKER_THREAD);
 	if (false == res)
 		return false;
-	_Parse.GetValue("USER_TIMEOUT", &SERVER_TIMEOUT);
+	_Parse.GetValue("SERVER_TIMEOUT", &SERVER_TIMEOUT);
 	_Parse.GetValue("CLIENT_MAX", &CLIENT_MAX);
+	_Parse.GetValue("USER_TIMEOUT", &USER_TIMEOUT);
 	_Parse.GetValue("PACKET_CODE", &PACKET_CODE);
 	_Parse.GetValue("PACKET_KEY1", &PACKET_KEY1);
 	_Parse.GetValue("PACKET_KEY2", &PACKET_KEY2);
