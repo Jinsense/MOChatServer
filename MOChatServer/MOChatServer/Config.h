@@ -34,6 +34,7 @@ public:
 	int WORKER_THREAD;
 	int SERVER_TIMEOUT;
 	int CLIENT_MAX;
+	int USER_TIMEOUT;
 	int PACKET_CODE;
 	int PACKET_KEY1;
 	int PACKET_KEY2;

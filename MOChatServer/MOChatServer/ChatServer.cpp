@@ -41,8 +41,8 @@ void CChatServer::OnClientJoin(st_SessionInfo Info)
 
 void CChatServer::OnClientLeave(unsigned __int64 ClientID)
 {
-
-	CPlayer * pPlayer = FindPlayer_ClientID(ClientID);
+	unsigned __int64 UserID = ClientID;
+	CPlayer * pPlayer = FindPlayer_ClientID(UserID);
 	if (nullptr == pPlayer)
 	{
 		_pLog->Log(const_cast<WCHAR*>(L"Error"), LOG_SYSTEM, const_cast<WCHAR*>(L"FindClientID Fail [ClientID : %d]"), ClientID);
@@ -61,7 +61,6 @@ void CChatServer::OnClientLeave(unsigned __int64 ClientID)
 		{
 			if ((*iter).AccountNo == pPlayer->_AccountNo)
 			{
-				_pLog->Log(const_cast<WCHAR*>(L"LeaveRoom"), LOG_SYSTEM, const_cast<WCHAR*>(L"[RoomNo : %d] AccountNo : %d"), pRoom->RoomNo, pPlayer->_AccountNo);
 				iter = pRoom->RoomPlayer.erase(iter);
 			}
 			else
@@ -73,7 +72,7 @@ void CChatServer::OnClientLeave(unsigned __int64 ClientID)
 	//-------------------------------------------------------------
 	//	맵에 유저 삭제
 	//-------------------------------------------------------------
-	RemovePlayer(ClientID);
+	RemovePlayer(UserID);
 	_PlayerPool->Free(pPlayer);
 	return;
 }
@@ -169,13 +168,13 @@ void CChatServer::HeartbeatThread_Update()
 		Sleep(1000);
 		UINT64 now = GetTickCount64();
 
-		/*
+		
 		AcquireSRWLockExclusive(&_PlayerMap_srwlock);
 		for (auto i = _PlayerMap.begin(); i != _PlayerMap.end(); i++)
 		{
 		if (now - i->second->_Time > _Config.USER_TIMEOUT)
 		{
-		_pLog->Log(const_cast<WCHAR*>(L"Error"), LOG_SYSTEM, const_cast<WCHAR*>(L"USER TIMEOUT : %d [AccountNo : %d]"), now - i->second->_Time, i->second->_AccountNo);
+		_pLog->Log(const_cast<WCHAR*>(L"HeartBeat"), LOG_SYSTEM, const_cast<WCHAR*>(L"USER TIMEOUT : %d [AccountNo : %d]"), now - i->second->_Time, i->second->_AccountNo);
 		//	바로 Disconnect 하면 데드락 위험성
 		//	임시 stack에 넣고 마지막에 Disconnect 호출할 것
 		temp.push(i->second->_ClientID);
@@ -188,7 +187,7 @@ void CChatServer::HeartbeatThread_Update()
 		Disconnect(ClientID);
 		temp.pop();
 		}
-		*/
+		
 	}
 }
 
@@ -514,8 +513,6 @@ void CChatServer::ReqEnterRoom(CPacket * pPacket, CPlayer * pPlayer)
 	SendPacket(pPlayer->_ClientID, ResPacket);
 	ResPacket->Free();
 	
-	_pLog->Log(const_cast<WCHAR*>(L"EnterRoom"), LOG_SYSTEM, const_cast<WCHAR*>(L"[RoomNo : %d] AccountNo : %d"), pRoom->RoomNo, pPlayer->_AccountNo);
-
 	//	해당 방에 유저 넣음
 	AcquireSRWLockExclusive(&pRoom->Room_lock);
 	pRoom->RoomPlayer.push_back(Info);

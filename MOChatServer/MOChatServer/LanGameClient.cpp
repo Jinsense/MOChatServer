@@ -97,7 +97,7 @@ void CLanGameClient::OnLanRecv(CPacket *pPacket)
 	//-------------------------------------------------------------
 	else if (Type == en_PACKET_CHAT_BAT_REQ_DESTROY_ROOM)
 	{
-		ReqDestryRoom(pPacket);
+		ReqDestroyRoom(pPacket);
 	}
 
 	return;
@@ -560,7 +560,7 @@ void CLanGameClient::ReqCreateRoom(CPacket * pPacket)
 	return;
 }
 
-void CLanGameClient::ReqDestryRoom(CPacket * pPacket)
+void CLanGameClient::ReqDestroyRoom(CPacket * pPacket)
 {
 	int ServerNo = NULL;
 	int RoomNo = NULL;
@@ -584,8 +584,6 @@ void CLanGameClient::ReqDestryRoom(CPacket * pPacket)
 		AcquireSRWLockExclusive(&pRoom->Room_lock);
 		for (iter = pRoom->RoomPlayer.begin(); iter != pRoom->RoomPlayer.end();)
 		{
-			_pChatServer->_pLog->Log(const_cast<WCHAR*>(L"DestryRoom"), LOG_SYSTEM, const_cast<WCHAR*>(L"[RoomNo : %d] AccountNo : %d"), pRoom->RoomNo, (*iter).AccountNo);
-
 //			_pChatServer->Disconnect((*iter).ClientID);
 			ClientID[num] = (*iter).ClientID;
 			num++;
