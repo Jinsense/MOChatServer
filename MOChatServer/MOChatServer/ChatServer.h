@@ -101,6 +101,7 @@ public:
 	//-----------------------------------------------------------
 	//	사용자 함수
 	//-----------------------------------------------------------
+	void	ThreadInit();
 	void	ConfigSet();
 	void	UTF8toUTF16(const char *szText, WCHAR *szBuf, int BufLen);
 	void	UTF16toUTF8(WCHAR *szText, char *szBuf, int BufLen);
@@ -170,6 +171,7 @@ public:
 
 protected:
 	HANDLE	_hHeartbeatThread;
+	HANDLE	_hLanGameCheckThread;
 
 	//-------------------------------------------------------------
 	// 접속자 관리.
