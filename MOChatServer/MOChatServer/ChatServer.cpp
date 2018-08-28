@@ -324,6 +324,30 @@ BATTLEROOM * CChatServer::FindBattleRoom(int RoomNo)
 		return pRoom;
 }
 
+BATTLEROOM * CChatServer::FindAndDeleteBattleRoom(int RoomNo)
+{
+	bool Find = false;
+	BATTLEROOM * pRoom = nullptr;
+	std::map<int, BATTLEROOM*>::iterator iter;
+
+	AcquireSRWLockExclusive(&_BattleRoom_lock);
+	iter = _BattleRoomMap.find(RoomNo);
+	if (iter == _BattleRoomMap.end())
+		Find = false;
+	else
+	{
+		Find = true;
+		pRoom = (*iter).second;
+		_BattleRoomMap.erase(iter);
+	}
+	ReleaseSRWLockExclusive(&_BattleRoom_lock);
+
+	if (false == Find)
+		return nullptr;
+	else
+		return pRoom;
+}
+
 int CChatServer::GetBattleRoomCount()
 {
 	//-------------------------------------------------------------
@@ -514,18 +538,21 @@ void CChatServer::ReqEnterRoom(CPacket * pPacket, CPlayer * pPlayer)
 
 	pPlayer->_RoomNo = RoomNo;
 
+	bool Send = false;
 	//	방 입장 응답
-	AcquireSRWLockExclusive(&pRoom->Room_lock);
+//	AcquireSRWLockExclusive(&pRoom->Room_lock);
 	BYTE Status = SUCCESS;
 	*ResPacket << Type << AccountNo << RoomNo << Status;
-	SendPacket(pPlayer->_ClientID, ResPacket);
+	Send = SendPacket(pPlayer->_ClientID, ResPacket);
 	ResPacket->Free();
 	
 	//	해당 방에 유저 넣음
-//	AcquireSRWLockExclusive(&pRoom->Room_lock);
-	pRoom->RoomPlayer.push_back(Info);
-	ReleaseSRWLockExclusive(&pRoom->Room_lock);
-
+	if (true == Send)
+	{
+		AcquireSRWLockExclusive(&pRoom->Room_lock);
+		pRoom->RoomPlayer.push_back(Info);
+		ReleaseSRWLockExclusive(&pRoom->Room_lock);
+	}
 	return;
 }
 

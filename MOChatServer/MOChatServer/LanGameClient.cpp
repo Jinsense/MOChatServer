@@ -571,7 +571,7 @@ void CLanGameClient::ReqDestroyRoom(CPacket * pPacket)
 	*pPacket >> ServerNo >> RoomNo >> ReqSequence;
 	ReqSequence++;
 	
-	pRoom = _pChatServer->FindBattleRoom(RoomNo);
+	pRoom = _pChatServer->FindAndDeleteBattleRoom(RoomNo);
 	if (nullptr == pRoom)
 	{
 		_pChatServer->m_Log->Log(L"Error", LOG_SYSTEM, L"Wrong RoomNo - RoomNo : %d", RoomNo);

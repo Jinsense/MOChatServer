@@ -126,6 +126,7 @@ public:
 	// 배틀 방 찾기
 	//-----------------------------------------------------------
 	BATTLEROOM * FindBattleRoom(int RoomNo);
+	BATTLEROOM * FindAndDeleteBattleRoom(int RoomNo);
 
 	//-----------------------------------------------------------
 	// 배틀 방 갯수
