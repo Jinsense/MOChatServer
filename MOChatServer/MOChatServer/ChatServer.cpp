@@ -210,7 +210,7 @@ void CChatServer::LanGameCheckThread_Update()
 
 void CChatServer::ThreadInit()
 {
-	_hHeartbeatThread = (HANDLE)_beginthreadex(NULL, 0, &HeartbeatThread, (LPVOID)this, 0, NULL);
+//	_hHeartbeatThread = (HANDLE)_beginthreadex(NULL, 0, &HeartbeatThread, (LPVOID)this, 0, NULL);
 	_hLanGameCheckThread = (HANDLE)_beginthreadex(NULL, 0, &LanGameCheckThread, (LPVOID)this, 0, NULL);
 	return;
 }
@@ -515,13 +515,14 @@ void CChatServer::ReqEnterRoom(CPacket * pPacket, CPlayer * pPlayer)
 	pPlayer->_RoomNo = RoomNo;
 
 	//	방 입장 응답
+	AcquireSRWLockExclusive(&pRoom->Room_lock);
 	BYTE Status = SUCCESS;
 	*ResPacket << Type << AccountNo << RoomNo << Status;
 	SendPacket(pPlayer->_ClientID, ResPacket);
 	ResPacket->Free();
 	
 	//	해당 방에 유저 넣음
-	AcquireSRWLockExclusive(&pRoom->Room_lock);
+//	AcquireSRWLockExclusive(&pRoom->Room_lock);
 	pRoom->RoomPlayer.push_back(Info);
 	ReleaseSRWLockExclusive(&pRoom->Room_lock);
 
