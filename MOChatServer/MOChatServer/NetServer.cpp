@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <wchar.h>
 #include <Ws2tcpip.h>
+#include <Mstcpip.h>
 #include <process.h>
 #include <time.h>
 #include <iostream>
@@ -79,6 +80,13 @@ bool CNetServer::ServerStart(WCHAR *pOpenIP, int iPort, int iMaxWorkerThread,
 	InetPton(AF_INET, (PCWSTR)pOpenIP, &_server_addr.sin_addr);
 	_server_addr.sin_port = htons(iPort);
 	setsockopt(m_listensock, IPPROTO_TCP, TCP_NODELAY, (const char*)&bNodelay, sizeof(bNodelay));
+
+	tcp_keepalive tcpkl;
+	DWORD dwResult;
+	tcpkl.onoff = 1;				// KEEPALIVE ON
+	tcpkl.keepalivetime = 10000;	// 10초 마다 KEEPALIVE 신호를 보내겠다. (윈도우 기본은 2시간)
+	tcpkl.keepaliveinterval = 1000;	// keepalive 신호를 보내고 응답이 없으면 1초마다 재 전송하겠다. (ms tcp 는 10회 재시도 한다)
+	WSAIoctl(m_listensock, SIO_KEEPALIVE_VALS, &tcpkl, sizeof(tcp_keepalive), 0, 0, &dwResult, NULL, NULL);
 
 	_iRetval = ::bind(m_listensock, (sockaddr *)&_server_addr, sizeof(_server_addr));
 	if (_iRetval == SOCKET_ERROR)
