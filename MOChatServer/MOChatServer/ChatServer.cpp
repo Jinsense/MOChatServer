@@ -52,6 +52,7 @@ void CChatServer::OnClientLeave(unsigned __int64 ClientID)
 	//-------------------------------------------------------------
 	//	방의 RoomPlayer에서 삭제
 	//-------------------------------------------------------------	
+	AcquireSRWLockExclusive(&_BattleRoom_lock);	
 	BATTLEROOM * pRoom = FindBattleRoom(pPlayer->_RoomNo);
 	if (nullptr != pRoom)
 	{
@@ -68,7 +69,7 @@ void CChatServer::OnClientLeave(unsigned __int64 ClientID)
 		}
 		ReleaseSRWLockExclusive(&pRoom->Room_lock);
 	}
-	
+	ReleaseSRWLockExclusive(&_BattleRoom_lock);
 	//-------------------------------------------------------------
 	//	맵에 유저 삭제
 	//-------------------------------------------------------------
@@ -307,7 +308,6 @@ BATTLEROOM * CChatServer::FindBattleRoom(int RoomNo)
 	BATTLEROOM * pRoom = nullptr;
 	std::map<int, BATTLEROOM*>::iterator iter;
 
-	AcquireSRWLockExclusive(&_BattleRoom_lock);
 	iter = _BattleRoomMap.find(RoomNo);
 	if (iter == _BattleRoomMap.end())
 		Find = false;
@@ -316,7 +316,6 @@ BATTLEROOM * CChatServer::FindBattleRoom(int RoomNo)
 		Find = true;
 		pRoom = (*iter).second;
 	}
-	ReleaseSRWLockExclusive(&_BattleRoom_lock);
 
 	if (false == Find)
 		return nullptr;
@@ -510,6 +509,7 @@ void CChatServer::ReqEnterRoom(CPacket * pPacket, CPlayer * pPlayer)
 	}
 
 	//	해당 방 검색
+	AcquireSRWLockExclusive(&_BattleRoom_lock);
 	pRoom = FindBattleRoom(RoomNo);
 	if (nullptr == pRoom)
 	{
@@ -553,6 +553,7 @@ void CChatServer::ReqEnterRoom(CPacket * pPacket, CPlayer * pPlayer)
 		pRoom->RoomPlayer.push_back(Info);
 		ReleaseSRWLockExclusive(&pRoom->Room_lock);
 	}
+	ReleaseSRWLockExclusive(&_BattleRoom_lock);
 	return;
 }
 

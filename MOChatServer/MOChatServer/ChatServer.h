@@ -45,6 +45,12 @@ typedef struct st_BattleRoom
 	char	EnterToken[32];
 	std::list<RoomPlayerInfo> RoomPlayer;
 	SRWLOCK		Room_lock;
+	st_BattleRoom() 
+	{
+		ServerNo = NULL, RoomNo = NULL, MaxUser = NULL;
+		ZeroMemory(&EnterToken, sizeof(EnterToken));
+		InitializeSRWLock(&Room_lock); 
+	}
 }BATTLEROOM;
 
 class CGameLanClient;

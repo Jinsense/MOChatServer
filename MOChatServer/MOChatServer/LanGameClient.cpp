@@ -541,7 +541,7 @@ void CLanGameClient::ReqCreateRoom(CPacket * pPacket)
 	//	BattleRoom을 생성해서 패킷의 정보를 넣어서 초기화를 해주고
 	//	RoomMap에 넣어준다. [ 채팅방 생성 ]
 	BATTLEROOM * pRoom = _pChatServer->_BattleRoomPool->Alloc();
-	InitializeSRWLock(&pRoom->Room_lock);
+//	InitializeSRWLock(&pRoom->Room_lock);
 	*pPacket >> pRoom->ServerNo >> pRoom->RoomNo >> pRoom->MaxUser;
 	pPacket->PopData((char*)&pRoom->EnterToken, sizeof(pRoom->EnterToken));
 	*pPacket >> ReqSequence;
