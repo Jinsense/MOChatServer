@@ -485,6 +485,8 @@ void CChatServer::ReqChatLogin(CPacket * pPacket, CPlayer * pPlayer)
 
 void CChatServer::ReqEnterRoom(CPacket * pPacket, CPlayer * pPlayer)
 {
+	bool Send = false;
+	bool Check = false;
 	INT64 AccountNo = NULL;
 	int RoomNo = NULL;
 	char EnterToken[32] = { 0, };
@@ -517,41 +519,43 @@ void CChatServer::ReqEnterRoom(CPacket * pPacket, CPlayer * pPlayer)
 		*ResPacket << Type << pPlayer->_AccountNo << RoomNo << Status;
 		SendPacket(pPlayer->_ClientID, ResPacket);
 		ResPacket->Free();
-		return;
+		Check = true;
 	}
 
 	//	EnterToken 체크
-	if (0 != strncmp(EnterToken, pRoom->EnterToken, sizeof(pRoom->EnterToken)))
+	if (false == Check && 0 != strncmp(EnterToken, pRoom->EnterToken, sizeof(pRoom->EnterToken)))
 	{
 		//	다른경우 로그 남기고 ConnectToken 다름 패킷 전송
 		BYTE Status = TOKEN_ERROR;
 		*ResPacket << Type << pPlayer->_AccountNo << RoomNo << Status;
 		SendPacket(pPlayer->_ClientID, ResPacket);
 		ResPacket->Free();
-		return;
+		Check = true;
 	}
 
-	RoomPlayerInfo Info;
-	Info.AccountNo = pPlayer->_AccountNo;
-	Info.ClientID = pPlayer->_ClientID;
-	Info.pPlayer = pPlayer;
-
-	pPlayer->_RoomNo = RoomNo;
-
-	bool Send = false;
-	//	방 입장 응답
-//	AcquireSRWLockExclusive(&pRoom->Room_lock);
-	BYTE Status = SUCCESS;
-	*ResPacket << Type << AccountNo << RoomNo << Status;
-	Send = SendPacket(pPlayer->_ClientID, ResPacket);
-	ResPacket->Free();
-	
-	//	해당 방에 유저 넣음
-	if (true == Send)
+	if (false == Check)
 	{
-		AcquireSRWLockExclusive(&pRoom->Room_lock);
-		pRoom->RoomPlayer.push_back(Info);
-		ReleaseSRWLockExclusive(&pRoom->Room_lock);
+		RoomPlayerInfo Info;
+		Info.AccountNo = pPlayer->_AccountNo;
+		Info.ClientID = pPlayer->_ClientID;
+		Info.pPlayer = pPlayer;
+
+		pPlayer->_RoomNo = RoomNo;
+
+		//	방 입장 응답
+		//	AcquireSRWLockExclusive(&pRoom->Room_lock);
+		BYTE Status = SUCCESS;
+		*ResPacket << Type << AccountNo << RoomNo << Status;
+		Send = SendPacket(pPlayer->_ClientID, ResPacket);
+		ResPacket->Free();
+
+		//	해당 방에 유저 넣음
+		if (true == Send)
+		{
+			AcquireSRWLockExclusive(&pRoom->Room_lock);
+			pRoom->RoomPlayer.push_back(Info);
+			ReleaseSRWLockExclusive(&pRoom->Room_lock);
+		}
 	}
 	ReleaseSRWLockExclusive(&_BattleRoom_lock);
 	return;
